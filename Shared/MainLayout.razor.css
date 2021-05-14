@@ -1,0 +1,48 @@
+/*
+Mobile First CSS design
+Design for everything less than 641px
+*/
+
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+
+/*Header Section*/
+.pb-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #545454;
+}
+
+
+/*Main Content Section*/
+.pb-main {
+    margin-top: 20px;
+    flex-grow: 1;
+}
+
+
+/*Footer Section*/
+.pb-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #E5E5E5;
+    padding: 10px;
+}
+
+
+/*
+Desktop view
+*/
+@media (min-width: 641px) {
+    
+    .header{
+        flex-direction: column;
+    }
+}

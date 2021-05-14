@@ -1,0 +1,58 @@
+﻿[
+  {
+    "Id": "1",
+    "Date": "2021-04-10",
+    "Description": "Initial account opening",
+    "Amount": 100,
+    "Label": "Bank"
+  },
+  {
+    "Id": "2",
+    "Date": "2021-04-16",
+    "Description": "Internet Bill",
+    "Amount": -39.99,
+    "Label": "Bill"
+  },
+  {
+    "Id": "3",
+    "Date": "2021-04-10",
+    "Description": "Savings",
+    "Amount": 94.12,
+    "Label": "Saving"
+  },
+  {
+    "Id": "4",
+    "Date": "2021-04-28",
+    "Description": "Paycheck",
+    "Amount": 450.78,
+    "Label": "Salary"
+  },
+  {
+    "Id": "5",
+    "Date": "2021-04-30",
+    "Description": "Expensive ice cream",
+    "Amount": -15.32,
+    "Label": "Recreation"
+  },
+  {
+    "Id": "6",
+    "Date": "2021-05-01",
+    "Description": "new gaming mouse",
+    "Amount": -64.17,
+    "Label": "PC"
+  },
+  {
+    "Id": "7",
+    "Date": "2021-05-10",
+    "Description": "tutoring math 2hr",
+    "Amount": 48,
+    "Label": "Salary"
+  },
+  {
+    "Id": "8",
+    "Date": "2021-05-10",
+    "Description": "tutoring math",
+    "Amount": -29.32,
+    "Label": "Groceries"
+  }
+]

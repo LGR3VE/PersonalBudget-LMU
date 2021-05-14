@@ -1,0 +1,154 @@
+﻿@inject IDialogService _dialogService;
+@inject ITransactionService _transactionService;
+
+@if (Transactions != null)
+{
+    <MudTable Items="@Transactions" Hover="true" SortLabel="Sort By" Filter="new Func<Transaction,bool>(FilterFunc)" Dense="@Detailed" Elevation="0" @bind-SelectedItem="selectedItem">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">@Header</MudText>
+            <MudToolBarSpacer />
+            <MudTextField @bind-Value="searchString" Immediate="true" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        
+        <HeaderContent>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="new Func<Transaction, object>(x => x.Date)">Date</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Transaction, object>(x => x.Description)">Description</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Transaction, object>(x => x.Amount)">Amount</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Transaction, object>(x => x.Label)">Label</MudTableSortLabel></MudTh>
+            <MudTh>Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Date">
+                @context.Date.ToString("dd.MM.yyyy")
+            </MudTd>
+            <MudTd DataLabel="Description">@context.Description</MudTd>
+            <MudTd DataLabel="Amount">@context.Amount</MudTd>
+            <MudTd DataLabel="Label">
+                @if (context.Label != null)
+                {@*Split label list by comma*@
+                    @foreach (var label in context.Label.Split(","))
+                    {
+                        <MudChip Color='Color.Info'>@label</MudChip>
+                    }
+                }
+            </MudTd>
+            <MudTd DataLabel="Action">
+                <button class="btn btn-info" @onclick="() => Edit(context)">edit</button>
+                <button class="btn btn-danger" @onclick="() => Delete(context)">delete</button>
+            </MudTd>
+        </RowTemplate>
+        
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] {25, 50}"/>
+        </PagerContent>
+
+    </MudTable>
+    
+}
+else
+{
+    <MudTable Items="@(loadingData)">
+        <HeaderContent>
+            <MudTh>Date</MudTh>
+            <MudTh>Description</MudTh>
+            <MudTh>Amount</MudTh>
+            <MudTh>Label</MudTh>
+            <MudTh>Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd><MudSkeleton Animation="Animation.Wave" /></MudTd>
+            <MudTd><MudSkeleton Animation="Animation.Wave" /></MudTd>
+            <MudTd><MudSkeleton Animation="Animation.Wave" /></MudTd>
+            <MudTd><MudSkeleton Animation="Animation.Wave" /></MudTd>
+            <MudTd><MudSkeleton Animation="Animation.Wave" /></MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+
+@code {
+
+    [Parameter]
+    public List<Transaction> Transactions { get; set; } = new List<Transaction>();
+    
+    [Parameter] public EventCallback<List<Transaction>> TransactionsChanged { get; set; }
+
+    [Parameter] public int ItemCount { get; set; }
+
+    [Parameter]
+    public string Header { get; set; } = "Transactions";
+
+    [Parameter]
+    public bool Detailed { get; set; }
+
+    private string searchString = "";
+    private Transaction selectedItem = null;
+    private List<string> loadingData = new(){ "1", "2", "3", "4", "5", "6","7"};
+
+    /// <summary>
+    /// OnParametersSet is invoked when a parameter has changed to update the GUI
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        //if the component is asked to deliver a limited item amount the last x items are taken from the global list
+        if (ItemCount != 0 && Transactions != null)
+        {
+            ItemCount = ItemCount > Transactions.Count ? Transactions.Count : ItemCount;
+
+            //return only the requested number of elements
+            Transactions = Transactions.Take(ItemCount).ToList();
+        }
+    }
+
+    /// <summary>
+    /// Updates the SearchString in realtime - @oninput event.
+    /// </summary>
+    /// <param name="e">The ChangeEventArgs from event call</param>
+    private void UpdateSearchString(ChangeEventArgs e) => searchString = e.Value.ToString();
+
+    
+    /// <summary>
+    /// The filter function that filters the Transaction. Each Transaction is check one at a time.
+    /// </summary>
+    /// <param name="element">the transaction to be checked if filter apply</param>
+    /// <returns>when Transaction contains searchSting</returns>
+    private bool FilterFunc(Transaction element)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Label.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{element.Amount} {element.Date}".Contains(searchString))
+            return true;
+        return false;
+    }
+
+
+    /// <summary>
+    /// Handles the editing of a transaction. Opens an edit dialog and awaits the result
+    /// </summary>
+    /// <param name="transaction">The Transaction to be edited</param>
+    private void Edit(Transaction transaction)
+    {
+
+        var dp = new DialogParameters {{nameof(EditDialog.Transaction), transaction}};
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true};
+        
+        _dialogService.Show<EditDialog>($"Edit Transaction", dp, options);
+        _transactionService.OnTransactionHasChanged();
+    }
+    
+    
+    /// <summary>
+    /// Handles the removal of a transaction from transaction list.
+    /// </summary>
+    /// <param name="transaction">The Transaction to be deleted</param>
+    private void Delete(Transaction transaction)
+    {
+        _transactionService.DeleteTransaction(transaction);
+        _transactionService.OnTransactionHasChanged();
+    }
+
+}

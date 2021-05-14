@@ -1,0 +1,107 @@
+@using ChartJs.Blazor.PieChart
+@using ChartJs.Blazor.Util
+@using ChartJs.Blazor.Common
+@using ChartJs.Blazor.Common.Axes
+@using ChartJs.Blazor.Common.Enums
+@using ChartJs.Blazor.Common.Time
+@using ChartJs.Blazor.LineChart
+@using Color = System.Drawing.Color
+
+<Chart Config="_config" @ref="_chart"></Chart>
+
+@code {
+
+    [Parameter]
+    public string[] Labels { get; set; }
+
+    [Parameter]
+    public decimal[] Data { get; set; }
+
+
+    private LineConfig _config;
+    private Chart _chart;
+
+    protected override void OnInitialized()
+    {
+        _config = new LineConfig
+        {
+            Options = new LineOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = false
+                },
+                Tooltips = new Tooltips
+                {
+                    Mode = InteractionMode.Nearest,
+                    Intersect = true
+                },
+                Hover = new Hover
+                {
+                    Mode = InteractionMode.Nearest,
+                    Intersect = true
+                }
+            }
+        };
+
+
+        IDataset<decimal> budgetHistoryDataset = new LineDataset<decimal>(Data)
+        {
+            Label = "Budget History",
+            BackgroundColor = ColorUtil.FromDrawingColor(Color.Plum),
+            BorderColor = ColorUtil.FromDrawingColor(Color.Plum),
+            Fill = FillingMode.Disabled,
+            LineTension = 0
+        };
+
+
+        foreach (var label in Labels)
+        {
+            _config.Data.Labels.Add(label);
+        }
+
+        _config.Data.Datasets.Add(budgetHistoryDataset);
+
+    }
+
+    protected override void OnParametersSet()
+    {
+
+        //update labels
+        _config.Data.Labels.Clear();
+        foreach (var l in Labels)
+        {
+            _config.Data.Labels.Add(l);
+        }
+        
+
+        //update Data
+        foreach (IDataset dataset in _config.Data.Datasets)
+        {
+
+            if (dataset is IDataset<TimePoint> pointDataset)
+            {
+                pointDataset.Clear();
+                foreach (var d in Data)
+                {
+                    pointDataset.Add(new TimePoint(DateTime.Now, Convert.ToDouble(d)));
+                }
+            }
+            else if (dataset is IDataset<decimal> decimalDataset)
+            {
+                decimalDataset.Clear();
+                foreach (var d in Data)
+                {
+                    decimalDataset.Add(d);
+                }
+
+            }
+        }
+        _chart?.Update();
+    }
+
+
+
+
+}

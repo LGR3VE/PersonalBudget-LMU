@@ -1,0 +1,32 @@
+<MudDialog>
+    
+    <DialogContent>
+        <TransactionForm Transaction="Transaction" ButtonText="Edit" OnValidSubmitCallback="Submit"></TransactionForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+    
+</MudDialog>
+
+
+@code {
+    
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+    
+    
+    [Parameter] 
+    public Transaction Transaction { get; set; }
+    
+    
+    void Submit()
+    {
+        MudDialog.Close();
+    }
+
+    void Cancel() => MudDialog.Cancel();
+    
+}

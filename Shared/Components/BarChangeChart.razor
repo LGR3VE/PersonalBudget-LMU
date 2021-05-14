@@ -1,0 +1,111 @@
+@using ChartJs.Blazor.PieChart
+@using ChartJs.Blazor.Util
+@using ChartJs.Blazor.Common
+@using ChartJs.Blazor.LineChart
+@using ChartJs.Blazor.BarChart
+@using ChartJs.Blazor.Common.Time
+
+<Chart Config="_config" @ref="_chart"></Chart>
+
+@code {
+
+    [Parameter]
+    public string[] Labels { get; set; }
+
+    [Parameter]
+    public decimal[] IncomeData { get; set; }
+    
+    [Parameter]
+    public decimal[] ExpenseData { get; set; }
+    
+
+    private BarConfig _config;
+    private Chart _chart;
+
+    protected override void OnInitialized()
+    {
+        _config = new BarConfig
+        {
+            Options = new BarOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = false
+                }
+            }
+        };
+        
+        IDataset<decimal> incomeDataset = new BarDataset<decimal>(IncomeData)
+        {
+            Label = "Income",
+            BackgroundColor = ColorUtil.ColorString(0,128,0, 0.4),
+            BorderColor = ColorUtil.ColorString(0,128,0, 0.6),
+            BorderWidth = 1
+        };
+        
+        IDataset<decimal> expenseDataset = new BarDataset<decimal>(ExpenseData)
+        {
+            Label = "Expense",
+            BackgroundColor = ColorUtil.ColorString(128,0,0, 0.4),
+            BorderColor = ColorUtil.ColorString(128,0, 0,0.6),
+            BorderWidth = 1
+        };
+        
+        //X-Axis Labels
+        foreach (var label in Labels)
+        {
+            _config.Data.Labels.Add(label);
+        }
+        
+        //Add Data
+        _config.Data.Datasets.Add(incomeDataset);
+        _config.Data.Datasets.Add(expenseDataset);
+        
+        
+    }
+    
+    //Updates Chats when Transaction or Filter updates
+    protected override void OnParametersSet()
+    {
+
+        //update labels
+        _config.Data.Labels.Clear();
+        foreach (var l in Labels)
+        {
+            _config.Data.Labels.Add(l);
+        }
+        
+
+
+        //update Data
+        foreach (IDataset dataset in _config.Data.Datasets)
+        {
+
+            var index = _config.Data.Datasets.IndexOf(dataset);
+            
+            if (dataset is IDataset<TimePoint> pointDataset)
+            {
+                pointDataset.Clear();
+                foreach (var d in IncomeData)
+                {
+                    pointDataset.Add(new TimePoint(DateTime.Now, Convert.ToDouble(d)));
+                }
+            }
+            else if (dataset is IDataset<decimal> decimalDataset)
+            {
+                decimalDataset.Clear();
+                foreach (var d in index == 0 ? IncomeData : ExpenseData)
+                {
+                    decimalDataset.Add(d);
+                }
+
+            }
+        }
+        
+        _chart?.Update();
+    }
+
+
+
+}

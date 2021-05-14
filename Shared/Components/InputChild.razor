@@ -1,0 +1,17 @@
+<input value="@Element">
+
+Cild string: @Element
+
+@code {
+    [Parameter] 
+    public String Element { get; set; }
+    
+    [Parameter]
+    public EventCallback<string> ElementChanged { get; set; }
+    
+    private async Task UpdateStringFromChild(ChangeEventArgs e)
+    {
+        Element = e.Value.ToString();
+        await ElementChanged.InvokeAsync(Element);
+    }
+}

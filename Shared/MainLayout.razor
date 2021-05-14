@@ -1,0 +1,30 @@
+﻿@inherits LayoutComponentBase
+
+
+@* Renders Page *@
+<div class="page">
+    
+    @* Header Component *@
+    <div class="pb-header">
+        <NavMenu/>
+    </div>
+    
+    @* Main content Component *@
+    <div class="pb-main">
+        <MudContainer MaxWidth="MaxWidth.False">
+            @Body
+        </MudContainer>
+    </div>
+    
+    @* Footer Component *@
+    <div class="pb-footer">
+        <div>
+            LMU - MMT Excercise 2 | <a href="https://lennardgreve.de/">Lennard Greve</a>
+        </div>
+    </div>
+</div>
+
+@* Helper Components to show Dialogs and Alerts*@
+<MudThemeProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>

@@ -1,0 +1,32 @@
+@inject IDialogService _dialogService
+
+<h2>Add Transaction</h2>
+
+<EditForm Model="@Transaction" OnValidSubmit="OnValidSubmitCallback">
+            
+    <DataAnnotationsValidator/>
+    @* <ValidationSummary/> *@
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudNumericField Label="Amount" @bind-Value="Transaction.Amount" For="@(() => Transaction.Amount)" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney" HideSpinButtons="true"  Step="0.01m"/>
+            <MudTextField Label="Description" @bind-Value="Transaction.Description" For="@(() => Transaction.Description)" Class="mt-3"/>
+            <MudDatePicker Label="Transaction date" @bind-Date="StartDate" Class="mt-3"/>
+            <MudTextField Label="Label" @bind-Value="Transaction.Label" For="@(() => Transaction.Label)" HelperText="Split labels with a comma." Class="mt-3"/>
+        </MudItem>
+    </MudGrid>
+    
+    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto mt-3">@ButtonText</MudButton>
+
+</EditForm>
+
+
+@code {
+    
+    [Parameter] public Transaction Transaction { get; set; }
+    [Parameter] public string ButtonText { get; set; } = "Save";
+    [Parameter] public EventCallback OnValidSubmitCallback { get; set; }
+    
+    private DateTime? StartDate{ get => Transaction.Date; set => Transaction.Date = value.GetValueOrDefault();}
+
+}

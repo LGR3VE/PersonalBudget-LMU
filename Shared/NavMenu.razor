@@ -1,0 +1,92 @@
+﻿@using Anchor = MudBlazor.Anchor
+@inject IDialogService _dialogService;
+@inject ITransactionService _transactionService;
+@inject IJSRuntime _jsRuntime
+
+<MudNavMenu Class="mud-width-full navbar">
+
+    <MudText Typo="Typo.h6" Class="navbar-title">Personal Budget 💸</MudText>
+    
+    <div class="nav-item-wrap-desktop @NavMenuCssClass">
+        
+        <MudNavLink Class="nav-item-desktop" Href="/" Icon="@Icons.Filled.Dashboard" IconColor="Color.Inherit" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+
+        <MudNavLink Class="nav-item-desktop" Href="/transaction" Icon="@Icons.Filled.List" IconColor="Color.Inherit">All transactions</MudNavLink>
+        
+        <MudMenu StartIcon="@Icons.Filled.Settings" Color="Color.Inherit" Label="Settings" Direction="Direction.Right" OffsetY="true" Class="nav-item-desktop">
+            <MudMenuItem OnClick="ShowUpload">Upload TransactionData.json</MudMenuItem>
+            <MudMenuItem OnClick="Download">Download TransactionData.json</MudMenuItem>
+        </MudMenu>
+        
+        <MudIconButton Class="navbar-toggler" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleNavMenu" />
+    </div>
+
+</MudNavMenu>
+
+
+@* Mobile Nav *@
+<MudDrawer @bind-Open="@collapseNavMenu" Elevation="1" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary">
+    <MudDrawerHeader>
+        <MudText Typo="Typo.h6">App Menu</MudText>
+    </MudDrawerHeader>
+    <MudNavMenu>
+        <MudNavLink Class="nav-item-mobile" Href="/" Icon="@Icons.Filled.Dashboard" IconColor="Color.Inherit" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+        
+        <MudNavLink Class="nav-item-mobile" Href="/transaction" Icon="@Icons.Filled.List" IconColor="Color.Inherit">All transactions</MudNavLink>
+        
+        <MudNavGroup Icon="@Icons.Filled.Settings" IconColor="Color.Inherit" Title="Settings" Expanded="true">
+            <MudNavLink Class="nav-item-mobile" OnClick="ShowUpload">Upload TransactionData.json</MudNavLink>
+            <MudNavLink Class="nav-item-mobile" OnClick="Download">Download TransactionData.json</MudNavLink>
+        </MudNavGroup>
+        
+        
+    </MudNavMenu>
+</MudDrawer>
+
+
+@code {
+    private bool collapseNavMenu = false;
+
+    private string NavMenuCssClass => collapseNavMenu ? "nav-collapse" : null;
+
+    /// <summary>
+    /// Toggles the NavMenu
+    /// </summary>
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    /// <summary>
+    /// Shows the upload dialog when Upload is clicked
+    /// </summary>
+    private async Task ShowUpload()
+    {
+        var options = new DialogOptions{ MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true};
+        _dialogService.Show<UploadData>($"Upload TransactionData.json", options);
+    }
+    
+    /// <summary>
+    /// Invokes the download from the TransactionData.json file
+    /// </summary>
+    private async Task Download()
+    {
+        var data = _transactionService.GetDownloadData();
+        var fileName = "TransactionData.json";
+        var contentType = "application/json";
+
+        // Check if the IJSRuntime is the WebAssembly implementation of the JSRuntime
+        if (_jsRuntime is IJSUnmarshalledRuntime webAssemblyJSRuntime)
+        {
+            webAssemblyJSRuntime.InvokeUnmarshalled<string, string, byte[], bool>("DownloadTransactionDataFast", fileName, contentType, data);
+        }
+        else
+        {
+            // Fall back to the slow method if not in WebAssembly
+            await _jsRuntime.InvokeVoidAsync("DownloadTransactionData", fileName, contentType, data);
+        }
+        
+    }
+    
+    
+}

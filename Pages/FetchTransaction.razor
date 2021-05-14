@@ -1,0 +1,222 @@
+﻿@page "/transaction"
+@using System.Globalization
+@inject ITransactionService _transactionService;
+
+
+<h1>All transactions</h1>
+@DateRange.Start.GetValueOrDefault().ToString(CultureInfo.CurrentCulture) - @DateRange.End.GetValueOrDefault().ToString(CultureInfo.CurrentCulture)
+@_transactions.Count()
+@_chartExpenseData.Length
+
+<button @onclick="UpdateChart">Update</button>
+
+<div class="basic-card">
+    <MudText Typo="Typo.h6">Select date range</MudText>
+    <MudGrid Class="mud-grid-align-items-xs-flex-end">
+        <MudItem xs="12" sm="6">
+            <MudDateRangePicker Label="Date from -> to" @bind-DateRange="DateRange" Editable="true" @onchange="UpdateChart"/>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudSwitch Color="Color.Primary" @bind-Checked=@(ShowAllTransactions) Label="Show all transactions"/>
+        </MudItem>
+    </MudGrid>
+</div>
+
+
+@if (_transactions == null)
+{
+    <MudSkeleton Animation="Animation.Wave" />
+    <MudSkeleton Animation="Animation.Wave" />
+    <MudSkeleton Animation="Animation.Wave" />
+    <MudSkeleton Animation="Animation.Wave" />
+}
+else
+{
+    @if (_chartBudgetHistoryData != null && _xAxisLabels != null)
+    {
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <div class="basic-card">
+                    @if (_chartBudgetHistoryData != null)
+                    {
+                        <LineHistoryChart Labels="@_xAxisLabels" Data="@_chartBudgetHistoryData"></LineHistoryChart>
+                    }
+                    else
+                    {
+                        <MudSkeleton Animation="Animation.Wave" />
+                        <MudSkeleton Animation="Animation.Wave" />
+                        <MudSkeleton Animation="Animation.Wave" />
+                        <MudSkeleton Animation="Animation.Wave" />
+                    }
+                </div>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <div class="basic-card">
+                    @if (_chartExpenseData != null)
+                    {
+                        <BarChangeChart Labels="@_xAxisLabels" IncomeData="@_chartIncomeData" ExpenseData="@_chartExpenseData"></BarChangeChart>
+                    }
+                    else
+                    {
+                        <MudSkeleton Animation="Animation.Wave" />
+                        <MudSkeleton Animation="Animation.Wave" />
+                        <MudSkeleton Animation="Animation.Wave" />
+                        <MudSkeleton Animation="Animation.Wave" />
+                    }
+                </div>
+            </MudItem>
+        </MudGrid>
+        
+    }
+    
+
+    //todo Date filter
+    <div class="basic-card">
+        <TransactionTable Detailed="true" Header="All transactions" @bind-Transactions="_transactions"></TransactionTable>
+    </div>
+
+}
+
+@code {
+
+    //Reference to ITransactionService List
+    private List<Transaction> _transactions;
+
+    //Date rage to transactions to be displayed
+    private DateRange DateRange { get; set; } = new(DateTime.Now.Subtract(TimeSpan.FromDays(20)), DateTime.Now.Date);
+    private bool ShowAllTransactions { get; set; }
+
+    //Charts properties
+    private Dictionary<DateTime, decimal> BudgetHistory { get; set; } = new Dictionary<DateTime, decimal>();
+    private Dictionary<DateTime, decimal> IncomeHistory { get; set; } = new Dictionary<DateTime, decimal>();
+    private Dictionary<DateTime, decimal> ExpenseHistory { get; set; } = new Dictionary<DateTime, decimal>();
+    public ChartOptions Options = new ChartOptions();
+    
+    //Chart labels
+    private string[] _xAxisLabels = {};
+    
+    //Chart Data
+    private decimal[] _chartBudgetHistoryData = {};
+    private decimal[] _chartIncomeData = {};
+    private decimal[] _chartExpenseData = {};
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _transactions = await _transactionService.GetTransactionList();
+        _transactionService.TransactionHasChanged += StateHasChanged;
+
+        SetupBudgetHistoryChart();
+        SetupIncomeExpenseChart();
+    }
+
+
+    private void SetupBudgetHistoryChart()
+    {
+        if (DateRange.Start != null && DateRange.End != null)
+        {
+
+            BudgetHistory = new Dictionary<DateTime, decimal>();
+
+            var startSum = _transactions.Where(t => t.Date<= DateRange.Start.GetValueOrDefault()).Sum(t => t.Amount);
+
+            BudgetHistory.Add(DateRange.Start.GetValueOrDefault(), startSum);
+
+
+            //calculate the sum for each day of the remaining days
+            var groupedTransactions = _transactions
+                .Where(t => t.Date > DateRange.Start.Value.Date)
+                .GroupBy(t => t.Date)
+                .ToDictionary(g => g.Key,
+                    g => startSum += g.Sum(t => t.Amount));
+
+            foreach (var (key, value) in groupedTransactions)
+            {
+                BudgetHistory.Add(key, value);
+            }
+
+        }
+
+        //phrase Keys from Directory into StringArray for Labels
+        _xAxisLabels = BudgetHistory.Keys.Select(key => key.ToString("dd MMM yyyy")).ToArray();
+
+        //phrase Vales from Directory into doubleArray for Data
+        _chartBudgetHistoryData = BudgetHistory.Values.ToArray();
+
+    }
+
+    private void SetupIncomeExpenseChart()
+    {
+        if (DateRange.Start != null && DateRange.End != null)
+        {
+
+            //calculate the sum for each day of the remaining days (income)
+            IncomeHistory = new List<Transaction>(_transactions)
+            .Where(t => t.Date != null && t.Date > DateRange.Start.GetValueOrDefault())
+            .Select(t =>
+            {
+                if (t.Amount > 0)
+                {
+                    return t;
+                }
+                return new Transaction()
+                {
+                    Amount = 0,
+                    Date = t.Date
+                };
+            })
+            .GroupBy(t => t.Date)
+            .ToDictionary(g => g.Key,
+            g => g.Sum(t => t.Amount));
+
+            //calculate the sum for each day of the remaining days (expense)
+            ExpenseHistory = new List<Transaction>(_transactions)
+                .Where(t => t.Date > DateRange.Start.GetValueOrDefault())
+                .Select(t =>
+                {
+                    if (t.Amount < 0)
+                    {
+                        return t;
+                    }
+                    return new Transaction()
+                    {
+                        Amount = 0,
+                        Date = t.Date
+                    };
+                })
+                .GroupBy(t => t.Date)
+                .ToDictionary(g => g.Key,
+                g => g.Sum(t => t.Amount));
+
+
+        }
+        //phrase Vales from Directory into doubleArray for Data
+        _chartIncomeData = IncomeHistory.Values.ToArray();
+        _chartExpenseData = ExpenseHistory.Values.ToArray();
+
+    }
+
+    private void UpdateChart()
+    {
+        _chartBudgetHistoryData = new decimal[]{};
+        _chartIncomeData = new decimal[]{};
+        _chartExpenseData = new decimal[]{};
+        SetupBudgetHistoryChart();
+        SetupIncomeExpenseChart();
+    }
+
+    private void CheckDateFilter()
+    {
+        if (ShowAllTransactions)
+        {
+            DateRange.Start = DateTime.MinValue;
+            DateRange.End = DateTime.Now.Date;
+        }
+        else
+        {
+            DateRange.Start = DateTime.Now.Subtract(TimeSpan.FromDays(20));
+            DateRange.End = DateTime.Now.Date;
+        }
+    }
+
+}

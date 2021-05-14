@@ -1,0 +1,83 @@
+﻿@page "/"
+@using Microsoft.Extensions.Logging
+@inject HttpClient Http
+@inject ITransactionService _transactionService;
+@inject ILogger<Index> Logger;
+@inject IJSRuntime JS;
+
+
+<MudGrid>
+    <MudItem xs="12" sm="6" md="4" lg="3">
+        <div class="basic-card budget-card">
+            <h2>Current Budget</h2>
+            <p class="budget-trend">@_transactionService.GetBalanceOfLast30Days() $ last 30 days</p>
+            <Animate Animation="Animations.FlipUp" Duration="TimeSpan.FromSeconds(1)">
+                <p class="budget-amount">@_transactionService.GetCurrentBalance() $</p>
+            </Animate>
+        </div>
+    </MudItem>
+    
+    <MudItem xs="12" sm="6" md="4" lg="3">
+        <div class="basic-card expense-income-card">
+            <h2>Expense & Income</h2>
+        
+            @* <p class="budget-income">Total Income: @_transactionService.GetTotalIncome()</p> *@
+            @* <p class="budget-income">Total Expences: @_transactionService.GetTotalExpense()</p> *@
+        
+            <div class="chartWrapper">
+                <PieChart Labels="@(new[] {"Income", "Expense"})"
+                          Income="@_transactionService.GetTotalIncome()"
+                          Expense="@_transactionService.GetTotalExpense()">
+                </PieChart>
+                        
+            </div>
+        </div>
+    </MudItem>
+    
+    <MudItem xs="12" md="4" lg="6">
+        <div class="basic-card">
+            <TransactionForm
+                Transaction="_newTransaction" ButtonText="Add" OnValidSubmitCallback="HandleValidSubmit">
+            </TransactionForm>
+        </div>
+    </MudItem>
+    
+</MudGrid>
+
+<MudGrid>
+    <MudItem xs="12">
+        <div class="basic-card">
+            <TransactionTable Transactions="_transactions" Header="last 10 transactions" ItemCount="10"></TransactionTable>
+        </div>
+    </MudItem>
+</MudGrid>
+
+@code
+{
+    private Transaction _newTransaction = new Transaction();
+    private List<Transaction> _transactions;
+
+    
+    /// <summary>
+    /// OnInitialized and OnInitializedAsync are invoked when the component is initialized after having received its initial parameters.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        //get the loaded transaction list from the TransactionService
+         _transactions = await _transactionService.GetTransactionList();
+        
+        //Event callback when a Transaction is updated
+        _transactionService.TransactionHasChanged += StateHasChanged;
+
+    }
+
+    /// <summary>
+    ///This function is invoked when the TransactionForm was validly submitted.
+    /// </summary>
+    private void HandleValidSubmit()
+    {
+        _transactionService.AddTransaction(_newTransaction);
+        _newTransaction = new Transaction();
+    }
+
+}

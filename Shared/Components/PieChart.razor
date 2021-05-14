@@ -1,0 +1,76 @@
+@using ChartJs.Blazor.PieChart
+@using ChartJs.Blazor.Util
+@using ChartJs.Blazor.Common
+
+<Chart Config="_config" @ref="_chart"></Chart>
+
+@code {
+
+    [Parameter]
+    public string[] Labels { get; set; }
+
+    [Parameter]
+    public decimal Income { get; set; }
+    
+    [Parameter]
+    public decimal Expense { get; set; }
+
+    private PieConfig _config;
+    private Chart _chart;
+
+    protected override void OnInitialized()
+    {
+        _config = new PieConfig
+        {
+            Options = new PieOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = false
+                },
+                Animation = new ArcAnimation(),
+                Legend = new Legend()
+                {
+                    Labels = new LegendLabels()
+                    {
+                        FontColor = "#FFFFFF",
+                    }
+                },
+                
+            }
+        };
+
+        foreach (var label in Labels)
+        {
+            _config.Data.Labels.Add(label);
+        }
+
+        var dataset = new PieDataset<decimal>(new []{Income, Expense})
+        {
+            BackgroundColor = new[]
+            {
+                ColorUtil.ColorHexString(43, 168, 74), // Slice 1 aka "Green"
+                ColorUtil.ColorHexString(220, 53, 69), // Slice 2 aka "Red"
+            }
+        };
+
+        _config.Data.Datasets.Add(dataset);
+    }
+
+    protected override void OnParametersSet()
+    {
+        foreach (IDataset<decimal> dataset in _config.Data.Datasets)
+        {
+            dataset.Clear();
+            dataset.Add(Income);
+            dataset.Add(Expense);
+            
+        }
+    
+        _chart?.Update();
+    }
+
+
+
+}

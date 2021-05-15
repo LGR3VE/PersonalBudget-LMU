@@ -1,14 +1,11 @@
+@inject ITransactionService _transactionService
+
 <MudDialog>
     
     <DialogContent>
         <TransactionForm Transaction="Transaction" ButtonText="Edit" OnValidSubmitCallback="Submit"></TransactionForm>
     </DialogContent>
 
-    <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
-    </DialogActions>
-    
 </MudDialog>
 
 
@@ -16,17 +13,17 @@
     
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
-    
-    
+
     [Parameter] 
     public Transaction Transaction { get; set; }
     
-    
+    /// <summary>
+    /// Submit is called when valid Form is submitted
+    /// </summary>
     void Submit()
     {
+        _transactionService.OnTransactionHasChanged();
         MudDialog.Close();
     }
 
-    void Cancel() => MudDialog.Cancel();
-    
 }

@@ -1,15 +1,16 @@
-﻿@inject IDialogService _dialogService;
+﻿@using System.Globalization
+@inject IDialogService _dialogService;
 @inject ITransactionService _transactionService;
+
 
 @if (Transactions != null)
 {
-    <MudTable Items="@Transactions" Hover="true" SortLabel="Sort By" Filter="new Func<Transaction,bool>(FilterFunc)" Dense="@Detailed" Elevation="0" @bind-SelectedItem="selectedItem">
+    <MudTable Items="@Transactions" Hover="true" SortLabel="Sort By" Filter="new Func<Transaction,bool>(FilterFunc)" Dense="@Detailed" Elevation="0" @bind-SelectedItem="_selectedItem">
         <ToolBarContent>
             <MudText Typo="Typo.h6">@Header</MudText>
             <MudToolBarSpacer />
-            <MudTextField @bind-Value="searchString" Immediate="true" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            <MudTextField @bind-Value="_searchString" Immediate="true" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
         </ToolBarContent>
-        
         <HeaderContent>
             <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="new Func<Transaction, object>(x => x.Date)">Date</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<Transaction, object>(x => x.Description)">Description</MudTableSortLabel></MudTh>
@@ -39,7 +40,7 @@
         </RowTemplate>
         
         <PagerContent>
-            <MudTablePager PageSizeOptions="new int[] {25, 50}"/>
+            <MudTablePager PageSizeOptions="new[] {25, 50}"/>
         </PagerContent>
 
     </MudTable>
@@ -47,7 +48,7 @@
 }
 else
 {
-    <MudTable Items="@(loadingData)">
+    <MudTable Items="@(_loadingData)">
         <HeaderContent>
             <MudTh>Date</MudTh>
             <MudTh>Description</MudTh>
@@ -68,61 +69,89 @@ else
 
 @code {
 
-    [Parameter]
-    public List<Transaction> Transactions { get; set; } = new List<Transaction>();
-    
-    [Parameter] public EventCallback<List<Transaction>> TransactionsChanged { get; set; }
+    private List<Transaction> Transactions { get; set; }
 
-    [Parameter] public int ItemCount { get; set; }
+    [Parameter] 
+    public int ItemCount { get; set; }
 
     [Parameter]
     public string Header { get; set; } = "Transactions";
 
     [Parameter]
     public bool Detailed { get; set; }
+    
+    [Parameter]
+    public DateRange DateRange { get; set; }
 
-    private string searchString = "";
-    private Transaction selectedItem = null;
-    private List<string> loadingData = new(){ "1", "2", "3", "4", "5", "6","7"};
+    [Parameter]
+    public bool ShowAllTransactions { get; set; } = true;
+
+    //the string from the searchbar
+    private string _searchString = "";
+    
+    //selected item in List
+    private Transaction _selectedItem = null;
+    
+    //placeholder for async loading Data
+    private List<string> _loadingData = new(){ "", "", "", "", "", "",""};
+
 
     /// <summary>
-    /// OnParametersSet is invoked when a parameter has changed to update the GUI
+    /// OnInitializedAsync is invoked when the component is initialized after having received its initial parameters.
     /// </summary>
-    protected override void OnParametersSet()
+    protected override async Task OnInitializedAsync()
     {
-        //if the component is asked to deliver a limited item amount the last x items are taken from the global list
-        if (ItemCount != 0 && Transactions != null)
-        {
-            ItemCount = ItemCount > Transactions.Count ? Transactions.Count : ItemCount;
+        //get the loaded transaction list from the TransactionService
+        Transactions = await _transactionService.GetTransactionList();
 
-            //return only the requested number of elements
-            Transactions = Transactions.Take(ItemCount).ToList();
-        }
+        _transactionService.TransactionHasChanged += StateHasChanged;
+
+        //if the component is asked to deliver a limited item amount the last x items are taken from the global list
+        //ItemCount = ItemCount > Transactions.Count ? Transactions.Count : ItemCount;
+
+        //return only the requested number of elements
+        //Transactions = Transactions.Take(ItemCount).ToList();
     }
+    
 
     /// <summary>
     /// Updates the SearchString in realtime - @oninput event.
     /// </summary>
     /// <param name="e">The ChangeEventArgs from event call</param>
-    private void UpdateSearchString(ChangeEventArgs e) => searchString = e.Value.ToString();
+    private void UpdateSearchString(ChangeEventArgs e) => _searchString = e.Value?.ToString();
 
     
     /// <summary>
     /// The filter function that filters the Transaction. Each Transaction is check one at a time.
     /// </summary>
-    /// <param name="element">the transaction to be checked if filter apply</param>
+    /// <param name="t">the transaction to be checked if filter apply</param>
     /// <returns>when Transaction contains searchSting</returns>
-    private bool FilterFunc(Transaction element)
+    private bool FilterFunc(Transaction t)
     {
-        if (string.IsNullOrWhiteSpace(searchString))
-            return true;
-        if (element.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        if (element.Label.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        if ($"{element.Amount} {element.Date}".Contains(searchString))
-            return true;
-        return false;
+        return MatchSearchString() && MatchDateRange();
+
+        //Check for Match with Search String
+        bool MatchSearchString()
+        {
+            if (string.IsNullOrWhiteSpace(_searchString))
+                return true;
+            if (t.Description.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (t.Label.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if ($"{t.Amount} {t.Date}".Contains(_searchString))
+                return true;
+            return false;
+        }
+
+        //Check if Item is in Range of Dates
+        bool MatchDateRange()
+        {
+            if (ShowAllTransactions || DateRange != null && t.Date >= DateRange.Start && t.Date <= DateRange.End)
+                return true;
+            return false;
+        }
+
     }
 
 
@@ -133,11 +162,9 @@ else
     private void Edit(Transaction transaction)
     {
 
-        var dp = new DialogParameters {{nameof(EditDialog.Transaction), transaction}};
+        var dp = new DialogParameters {{nameof(TransactionEditDialog.Transaction), transaction}};
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true};
-        
-        _dialogService.Show<EditDialog>($"Edit Transaction", dp, options);
-        _transactionService.OnTransactionHasChanged();
+        _dialogService.Show<TransactionEditDialog>($"Edit Transaction", dp, options);
     }
     
     
@@ -148,7 +175,6 @@ else
     private void Delete(Transaction transaction)
     {
         _transactionService.DeleteTransaction(transaction);
-        _transactionService.OnTransactionHasChanged();
     }
 
 }

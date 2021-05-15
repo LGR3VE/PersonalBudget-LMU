@@ -1,4 +1,6 @@
 ///JavaScript helper function to Download a file from a byte[] using Blazor WebAssembly
+//credits to Gérald Barré 
+//source: https://www.meziantou.net/generating-and-downloading-a-file-in-a-blazor-webassembly-application.htm
 function DownloadTransactionDataFast(name, contentType, content) {
     // Convert the parameters to actual JS types
     const nameStr = BINDING.conv_string(name);
@@ -22,6 +24,8 @@ function DownloadTransactionDataFast(name, contentType, content) {
 
 
 ///JavaScript helper function to Download a file from a byte[]
+//credits to Gérald Barré 
+//source: https://www.meziantou.net/generating-and-downloading-a-file-in-a-blazor-webassembly-application.htm
 function DownloadTransactionData(filename, contentType, content) {
     
     // Blazor marshall byte[] to a base64 string, so we first need to convert the string (content) to a Uint8Array to create the File

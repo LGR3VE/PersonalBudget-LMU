@@ -11,7 +11,7 @@
         <MudItem xs="12">
             <MudNumericField Label="Amount" @bind-Value="Transaction.Amount" For="@(() => Transaction.Amount)" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AttachMoney" HideSpinButtons="true"  Step="0.01m"/>
             <MudTextField Label="Description" @bind-Value="Transaction.Description" For="@(() => Transaction.Description)" Class="mt-3"/>
-            <MudDatePicker Label="Transaction date" @bind-Date="StartDate" Class="mt-3"/>
+            <MudDatePicker Label="Transaction date" @bind-Date="FormDate" Class="mt-3"/>
             <MudTextField Label="Label" @bind-Value="Transaction.Label" For="@(() => Transaction.Label)" HelperText="Split labels with a comma." Class="mt-3"/>
         </MudItem>
     </MudGrid>
@@ -27,6 +27,7 @@
     [Parameter] public string ButtonText { get; set; } = "Save";
     [Parameter] public EventCallback OnValidSubmitCallback { get; set; }
     
-    private DateTime? StartDate{ get => Transaction.Date; set => Transaction.Date = value.GetValueOrDefault();}
+    //Helper property to convert DateTime? from the Datepicker component to Transaction.Date
+    private DateTime? FormDate{ get => Transaction.Date; set => Transaction.Date = value.GetValueOrDefault();}
 
 }

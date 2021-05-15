@@ -1,58 +1,79 @@
-﻿[
-  {
-    "Id": "1",
-    "Date": "2021-04-10",
-    "Description": "Initial account opening",
-    "Amount": 100,
-    "Label": "Bank"
-  },
-  {
-    "Id": "2",
-    "Date": "2021-04-16",
-    "Description": "Internet Bill",
-    "Amount": -39.99,
-    "Label": "Bill"
-  },
-  {
-    "Id": "3",
-    "Date": "2021-04-10",
-    "Description": "Savings",
-    "Amount": 94.12,
-    "Label": "Saving"
-  },
-  {
-    "Id": "4",
-    "Date": "2021-04-28",
-    "Description": "Paycheck",
-    "Amount": 450.78,
-    "Label": "Salary"
-  },
-  {
-    "Id": "5",
-    "Date": "2021-04-30",
-    "Description": "Expensive ice cream",
-    "Amount": -15.32,
-    "Label": "Recreation"
-  },
-  {
-    "Id": "6",
-    "Date": "2021-05-01",
-    "Description": "new gaming mouse",
-    "Amount": -64.17,
-    "Label": "PC"
-  },
-  {
-    "Id": "7",
-    "Date": "2021-05-10",
-    "Description": "tutoring math 2hr",
-    "Amount": 48,
-    "Label": "Salary"
-  },
-  {
-    "Id": "8",
-    "Date": "2021-05-10",
-    "Description": "tutoring math",
-    "Amount": -29.32,
-    "Label": "Groceries"
-  }
+[
+    {
+        "Id": "b0e10d3b-91bd-48f6-9d7d-765ca5668e16",
+        "Date": "2021-04-10T00:00:00",
+        "Description": "Initial account opening 🏦",
+        "Amount": 100.0,
+        "Label": "Bank"
+    },
+    {
+        "Id": "3bff23df-0d82-41b4-bf77-2270be458015",
+        "Date": "2021-04-16T00:00:00",
+        "Description": "Internet Bill 🌐",
+        "Amount": -39.99,
+        "Label": "Invoice"
+    },
+    {
+        "Id": "a24161a8-6a2c-4c45-b112-8906fb123f6e",
+        "Date": "2021-04-07T00:00:00",
+        "Description": "Savings 💎",
+        "Amount": 94.12,
+        "Label": "Saving"
+    },
+    {
+        "Id": "909e39ba-e7d3-4d1d-b6ff-a505308cf623",
+        "Date": "2021-04-28T00:00:00",
+        "Description": "Paycheck 💰",
+        "Amount": 450.78,
+        "Label": "Salary, Job"
+    },
+    {
+        "Id": "08a02b77-25b3-4346-90f9-2b81206d5fa4",
+        "Date": "2021-04-30T00:00:00",
+        "Description": "Expensive Ice Cream 🍦",
+        "Amount": -15.32,
+        "Label": "Food"
+    },
+    {
+        "Id": "1938fa0d-d8a6-4605-8170-38ecc811c305",
+        "Date": "2021-05-01T00:00:00",
+        "Description": "Gaming Mouse 🖥️",
+        "Amount": -64.17,
+        "Label": "Tech"
+    },
+    {
+        "Id": "59f8e068-3f12-4647-9c6d-73e6f85d0fb4",
+        "Date": "2021-05-10T00:00:00",
+        "Description": "Tutoring Math 2hr 📚",
+        "Amount": 45.0,
+        "Label": "Salary, Tutoring"
+    },
+    {
+        "Id": "d8dca327-97e4-4084-991d-72f85bf72a29",
+        "Date": "2021-05-15T00:00:00",
+        "Description": "Weekend Drinks  🥂",
+        "Amount": -24.0,
+        "Label": "Party"
+    },
+    {
+        "Id": "08c32f8e-d111-43c6-ba11-41fb405f9203",
+        "Date": "2021-05-13T00:00:00",
+        "Description": "Uni Material ✏️",
+        "Amount": -12.52,
+        "Label": "University, Education"
+    },
+    {
+        "Id": "79d39761-a582-4c0a-85d6-2568588fe738",
+        "Date": "2021-05-18T00:00:00",
+        "Description": "Groceries 🛒",
+        "Amount": -5.81,
+        "Label": "Food"
+    },
+    {
+        "Id": "3650140b-bb14-4dac-8365-613ee95c6177",
+        "Date": "2021-05-19T00:00:00",
+        "Description": "Birthday present 🎁",
+        "Amount": -18.34,
+        "Label": "Extra"
+    }
 ]

@@ -108,5 +108,17 @@ namespace PersonalBudget.Services
         /// </summary>
         /// <returns>Transaction data as byte[]</returns>
         byte[] GetDownloadData();
+
+        /// <summary>
+        /// Calculate Income from the last 30 days
+        /// </summary>
+        /// <returns>the sum of all positive transactions from the last 30 days</returns>
+        decimal GetIncomeLast30Days();
+        
+        /// <summary>
+        /// Calculate Expense from the last 30 days
+        /// </summary>
+        /// <returns>the sum of all negative transactions from the last 30 days</returns>
+        decimal GetExpenseLast30Days();
     }
 }

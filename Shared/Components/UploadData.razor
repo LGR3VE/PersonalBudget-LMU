@@ -1,9 +1,8 @@
 @using System.IO
-@using System.Text
 @using Newtonsoft.Json
-@inject ISnackbar Snackbar
+@inject ISnackbar _snackbar
 @inject ITransactionService _transactionService;
-@inject HttpClient Http;
+@inject HttpClient _http;
 
 <style>
     .drag-drop-zone {
@@ -28,14 +27,14 @@
 
     <InputFile OnChange="OnInputFileChanged" class="drag-drop-input" accept="application/json"/>
 
-    @if (fileNames.Count == 0)
+    @if (_fileNames.Count == 0)
     {
         <MudText Typo="Typo.h5" Style="padding:2em;">Drag and drop TransactionData.json here or click</MudText>
     }
     else
     {
         <MudList Style="padding:2em;width:100%;" Dense="true" >
-            @foreach (var file in fileNames)
+            @foreach (var file in _fileNames)
             {
                 <MudListItem @key="@file">
                    <MudChip Color="Color.Dark" Style="width:60px; overflow:hidden;" Text="@(file.Split(".").Last())" />
@@ -48,10 +47,13 @@
 
 <MudGrid Justify="Justify.Center" Spacing="4" Style="padding: 1rem">
     <MudItem>
-        <MudButton OnClick="Upload" Disabled="@(!fileNames.Any())" Color="Color.Primary" Variant="Variant.Filled">Upload</MudButton>
+        <MudButton OnClick="Upload" Disabled="@(!_fileNames.Any())" Color="Color.Primary" Variant="Variant.Filled">Replace transactions</MudButton>
     </MudItem>
     <MudItem>
-        <MudButton OnClick="@fileNames.Clear" Disabled="@(!fileNames.Any())" Color="Color.Error" Variant="Variant.Filled">Clear</MudButton>
+            <MudButton OnClick="Import" Disabled="@(!_fileNames.Any())" Color="Color.Primary" Variant="Variant.Filled">Add transactions</MudButton>
+        </MudItem>
+    <MudItem>
+        <MudButton OnClick="@_fileNames.Clear" Disabled="@(!_fileNames.Any())" Color="Color.Error" Variant="Variant.Filled">Clear</MudButton>
     </MudItem>
 </MudGrid>
 
@@ -61,41 +63,90 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
     
     string _dragEnterStyle;
-    IList<string> fileNames = new List<string>();
+    IList<string> _fileNames = new List<string>();
     private IBrowserFile DataFile { get; set; }
     
-
+    /// <summary>
+    /// Listens to a InputFileChange Event and handel update
+    /// </summary>
+    /// <param name="e">The change EventArgs</param>
     void OnInputFileChanged(InputFileChangeEventArgs e)
     {
+        //store files from EventArgs
         var files = e.GetMultipleFiles();
-        fileNames = files.Select(f => f.Name).ToList();
+        //select the Name of all uploaded files
+        _fileNames = files.Select(f => f.Name).ToList();
+        //select only first file to process
         DataFile = files.FirstOrDefault();
 
     }
 
+    /// <summary>
+    /// Upload the file to the local browser storage and replace existing transaction list
+    /// </summary>
     private async Task Upload()
     {
-
-        Stream stream = DataFile.OpenReadStream();
-        using var reader = new StreamReader(stream);
-        string json = await reader.ReadToEndAsync();
-        stream.Close();
-      
+        //_snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+        var json = await ReadJsonFileAsync();
         
-        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+        //try to phrase string to an object
         try
         {
+            //Convert string "json" to List<Transaction> object
             var tl = JsonConvert.DeserializeObject<List<Transaction>>(json);
+            //replaces old transactions with imported ones
             _transactionService.SetTransactionList(tl);
+            //Display Success Banner
+            _snackbar.Add("TransactionData uploaded!", Severity.Success);
+            //Close Dialog
+            MudDialog.Close(DialogResult.Ok(true));
+            //Call OnChangeEvent to Update GUI
             _transactionService.OnTransactionHasChanged();
-            Snackbar.Add("TransactionData uploaded!", Severity.Success);
+        }
+        catch (Exception e)
+        {
+            //Display Error Banner
+            _snackbar.Add("TransactionData is invalid - please check the file.", Severity.Error);
+            Console.WriteLine("Error: " + e.Message);
+        }
+
+    }
+    
+    /// <summary>
+    /// Upload the file to the local browser storage and extend existing transaction list
+    /// </summary>
+    private async Task Import()
+    {
+        var json = await ReadJsonFileAsync();
+        
+        //try to phrase string to an object
+        try
+        {
+            //Convert string "json" to List<Transaction> object
+            var tl = JsonConvert.DeserializeObject<List<Transaction>>(json);
+            //Adds new transactions instead of replacing
+            _transactionService.AddTransactionList(tl);
+            //Call OnChangeEvent to Update GUI
+            _transactionService.OnTransactionHasChanged();
+            //Display Success Banner
+            _snackbar.Add("TransactionData imported!", Severity.Success);
+            //Close Dialog
             MudDialog.Close(DialogResult.Ok(true));
         }
         catch (Exception e)
         {
-            Snackbar.Add("TransactionData is invalid - please check the file.", Severity.Error);
-            Console.WriteLine(e.Message);
+            //Display Error Banner
+            _snackbar.Add("TransactionData is invalid - please check the file.", Severity.Error);
+            Console.WriteLine("Error: " + e.Message);
         }
+    }
 
+    private async Task<string> ReadJsonFileAsync()
+    {
+        var stream = DataFile.OpenReadStream();
+        using var reader = new StreamReader(stream);
+        var jsonString = await reader.ReadToEndAsync();
+        stream.Close();
+        return jsonString;
     }
 }

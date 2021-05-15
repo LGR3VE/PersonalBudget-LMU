@@ -1,16 +1,15 @@
 ﻿@page "/"
 @using Microsoft.Extensions.Logging
-@inject HttpClient Http
+@inject HttpClient _http
 @inject ITransactionService _transactionService;
-@inject ILogger<Index> Logger;
-@inject IJSRuntime JS;
-
+@inject ILogger<Index> _logger;
+@inject IJSRuntime _js;
 
 <MudGrid>
     <MudItem xs="12" sm="6" md="4" lg="3">
         <div class="basic-card budget-card">
             <h2>Current Budget</h2>
-            <p class="budget-trend">@_transactionService.GetBalanceOfLast30Days() $ last 30 days</p>
+            <p class="budget-trend">@(_transactionService.GetBalanceOfLast30Days() > 0 ? "+" : "")@_transactionService.GetBalanceOfLast30Days()$ last 30 days</p>
             <Animate Animation="Animations.FlipUp" Duration="TimeSpan.FromSeconds(1)">
                 <p class="budget-amount">@_transactionService.GetCurrentBalance() $</p>
             </Animate>
@@ -21,11 +20,11 @@
         <div class="basic-card expense-income-card">
             <h2>Expense & Income</h2>
         
-            @* <p class="budget-income">Total Income: @_transactionService.GetTotalIncome()</p> *@
-            @* <p class="budget-income">Total Expences: @_transactionService.GetTotalExpense()</p> *@
+            <p class="budget-income">Income last 30 days: @_transactionService.GetIncomeLast30Days()$</p>
+            <p class="budget-income">Expences last 30 days: @_transactionService.GetExpenseLast30Days()$</p>
         
             <div class="chartWrapper">
-                <PieChart Labels="@(new[] {"Income", "Expense"})"
+                <PieChart Labels="@(new[] {"Total Income", "Total Expense"})"
                           Income="@_transactionService.GetTotalIncome()"
                           Expense="@_transactionService.GetTotalExpense()">
                 </PieChart>
@@ -47,28 +46,24 @@
 <MudGrid>
     <MudItem xs="12">
         <div class="basic-card">
-            <TransactionTable Transactions="_transactions" Header="last 10 transactions" ItemCount="10"></TransactionTable>
+            <TransactionTable Header="last 10 transactions" ItemCount="10"></TransactionTable>
         </div>
     </MudItem>
 </MudGrid>
 
 @code
 {
-    private Transaction _newTransaction = new Transaction();
-    private List<Transaction> _transactions;
+    private Transaction _newTransaction = new();
 
-    
     /// <summary>
-    /// OnInitialized and OnInitializedAsync are invoked when the component is initialized after having received its initial parameters.
+    /// OnInitializedAsync is invoked when the component is initialized after having received its initial parameters.
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        //get the loaded transaction list from the TransactionService
-         _transactions = await _transactionService.GetTransactionList();
-        
         //Event callback when a Transaction is updated
         _transactionService.TransactionHasChanged += StateHasChanged;
-
+        //Load the Transaction list from localhost
+        await _transactionService.GetTransactionList();
     }
 
     /// <summary>
@@ -76,7 +71,10 @@
     /// </summary>
     private void HandleValidSubmit()
     {
+        //Calls the TransactionService to add a new Transaction
         _transactionService.AddTransaction(_newTransaction);
+        
+        //Set the object of the InputForm to a new instance
         _newTransaction = new Transaction();
     }
 

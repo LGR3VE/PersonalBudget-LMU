@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PersonalBudget.Models
 {
+    /// <summary>
+    /// The transaction model that contains the transaction properties and model validation.
+    /// </summary>
     public class Transaction
     {
         //a unique id for each transaction

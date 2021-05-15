@@ -39,13 +39,17 @@ namespace PersonalBudget.Services
             {
                 await LoadTransactionListAsync();
             }
+            
+            //Return the transaction list ordered
             return TransactionList;
         }
         
         /// <inheritdoc />
         public void AddTransaction(Transaction transaction)
         {
+            //Add Transaction to List
             TransactionList.Add(transaction);
+            OnTransactionHasChanged();
         }
 
         /// <inheritdoc />
@@ -59,6 +63,7 @@ namespace PersonalBudget.Services
                     Amount = amount,
                     Label = label
                 });
+            OnTransactionHasChanged();
         }
         
         /// <inheritdoc />
@@ -72,6 +77,7 @@ namespace PersonalBudget.Services
                     Amount = amount,
                     Label = label
                 });
+            OnTransactionHasChanged();
         }
 
         /// <inheritdoc />
@@ -107,7 +113,9 @@ namespace PersonalBudget.Services
         /// <inheritdoc />
         public bool DeleteTransaction(Transaction transaction)
         {
-            return TransactionList.Remove(transaction);
+            var result = TransactionList.Remove(transaction);
+            OnTransactionHasChanged();
+            return result;
         }
         
         /// <inheritdoc />
@@ -119,18 +127,26 @@ namespace PersonalBudget.Services
         /// <inheritdoc />
         public void SetTransactionList(List<Transaction> transactions)
         {
-            TransactionList = transactions;
+            //this way is chosen to keep the current reference of the List
+            TransactionList.Clear();
+            foreach (var t in transactions)
+            {
+                TransactionList.Add(t);
+            }
+            OnTransactionHasChanged();
         }
         
         /// <inheritdoc />
         public void AddTransactionList(List<Transaction> transactions)
         {
             TransactionList.AddRange(transactions);
+            OnTransactionHasChanged();
         }
 
         /// <inheritdoc />
         public void OnTransactionHasChanged()
         {
+            Console.WriteLine("CHANGE!!");
             TransactionHasChanged?.Invoke();
         }
 
@@ -139,6 +155,24 @@ namespace PersonalBudget.Services
         {
             var json = JsonConvert.SerializeObject(TransactionList);
             return System.Text.Encoding.UTF8.GetBytes(json);
+        }
+        
+        /// <inheritdoc />
+        public decimal GetIncomeLast30Days()
+        {
+            //return the sum of all positive transaction from the last 30 days
+            return TransactionList
+                .Where(t => (DateTime.Now - t.Date) <= TimeSpan.FromDays(30) && t.Amount > 0)
+                .Sum(transaction => transaction.Amount);
+        }
+        
+        /// <inheritdoc />
+        public decimal GetExpenseLast30Days()
+        {
+            //return the sum of all negative transaction from the last 30 days
+            return TransactionList
+                .Where(t => (DateTime.Now - t.Date) <= TimeSpan.FromDays(30) && t.Amount < 0)
+                .Sum(transaction => transaction.Amount);
         }
     }
 }

@@ -116,9 +116,9 @@ namespace PersonalBudget.Services
         decimal GetIncomeLast30Days();
         
         /// <summary>
-        /// Calculate Expense from the last 30 days
+        /// Calculate Expenses from the last 30 days
         /// </summary>
         /// <returns>the sum of all negative transactions from the last 30 days</returns>
-        decimal GetExpenseLast30Days();
+        decimal GetExpensesLast30Days();
     }
 }

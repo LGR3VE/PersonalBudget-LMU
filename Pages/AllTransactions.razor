@@ -11,12 +11,11 @@
             <MudDateRangePicker Label="Select start and end date" @bind-DateRange="DateRange" Disabled="ShowAllTransactions" @onchange="UpdateChart"/>
         </MudItem>
         <MudItem xs="6" sm="3">
-            <MudSwitch Color="Color.Primary" @bind-Checked=@(ShowAllTransactions) Label="Show all transactions"/>
+            <MudSwitch Color="Color.Primary" @bind-Checked=@ShowAllTransactions Label="Show all transactions"/>
         </MudItem>
         <MudItem xs="6" sm="3">
             <MudSwitch Color="Color.Primary" @bind-Checked=@ShowGraphs Label="Show graphs"/>
         </MudItem>
-        
     </MudGrid>
 </div>
 
@@ -71,11 +70,40 @@
 
     //Reference to ITransactionService List
     private List<Transaction> _transactions;
-
+    
     //Date rage to transactions to be displayed
-    private DateRange DateRange { get ; set; } = new(DateTime.Now.Subtract(TimeSpan.FromDays(20)), DateTime.Now.Date);
-    private bool ShowAllTransactions { get; set; } = true;
-    private bool ShowGraphs { get; set; }
+    private DateRange _dateRange { get ; set; } = new(DateTime.Now.Subtract(TimeSpan.FromDays(60)), DateTime.Now.Date);
+    
+    //Date rage helper property for GUID
+    private DateRange DateRange
+    {
+        get => _dateRange;
+        set
+        {
+            //update DateRange when Daterage Picker is updated and update Graph Data
+            _dateRange = value;
+            UpdateChart();
+        }
+    }
+    
+    //property for displaying all transactions
+    private bool _showAllTransactions { get; set; } = true;
+
+    //Date rage helper property for GUID
+    private bool ShowAllTransactions
+    {
+        get => _showAllTransactions;
+        set
+        {
+            //update DateRange when Daterage Picker is updated and update Graph Data
+            _showAllTransactions = value;
+            //set Start of Daterange
+            DateRange.Start = value ? _transactions.OrderBy(t => t.Date).FirstOrDefault()?.Date : DateTime.Now.Subtract(TimeSpan.FromDays(30));
+            UpdateChart();
+        }
+    }
+    
+    private bool ShowGraphs { get; set; } = true;
 
     //Charts properties
     private Dictionary<DateTime, decimal> BudgetHistory { get; set; } = new();
@@ -101,18 +129,10 @@
         //Event callback when a Transaction is updated to rerender UI
         _transactionService.TransactionHasChanged += StateHasChanged;
         _transactionService.TransactionHasChanged += UpdateChart;
-
-    }
-
-    /// <summary>
-    /// OnParametersSet is invoked when parameters from the Component change.
-    /// </summary>
-    protected override void OnParametersSet()
-    {
-        //updates charts whenever Parameters are changed e.g. DateRange, etc.
         UpdateChart();
     }
 
+    
     /// <summary>
     /// Setup Data for BudgetHistory Chart
     /// </summary>
@@ -121,6 +141,7 @@
         if (DateRange.Start != null && DateRange.End != null)
         {
             BudgetHistory = new Dictionary<DateTime, decimal>();
+            BudgetHistory.Clear();
 
             //Sum of all transactions: 1. Prior to Startdate
             var startSum = _transactions
@@ -128,7 +149,7 @@
                 .Sum(t => t.Amount);
 
             //First Value to be added
-            BudgetHistory.Add(DateRange.Start.GetValueOrDefault(), startSum);
+            BudgetHistory.Add(DateRange.Start.GetValueOrDefault() - TimeSpan.FromDays(1), startSum);
 
 
             //calculate the sum for each day of the remaining days
@@ -156,7 +177,7 @@
     }
 
     /// <summary>
-    /// Setup Data for Income & Expense Chart
+    /// Setup Data for Income & Expenses Chart
     /// </summary>
     private void SetupIncomeExpenseChart()
     {
@@ -182,7 +203,7 @@
             .ToDictionary(g => g.Key,
             g => g.Sum(t => t.Amount));
 
-            //calculate the sum for each day of the remaining days (expense)
+            //calculate the sum for each day of the remaining days (expenses)
             ExpenseHistory = new List<Transaction>(_transactions)
                 .Where(t => t.Date >= DateRange.Start.GetValueOrDefault() && t.Date <= DateRange.End.GetValueOrDefault())
                 .Select(t =>
@@ -223,6 +244,8 @@
         //Start Setup again with new values
         SetupBudgetHistoryChart();
         SetupIncomeExpenseChart();
+        Console.WriteLine("update");
+        StateHasChanged();
     }
 
 }

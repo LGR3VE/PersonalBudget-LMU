@@ -18,13 +18,13 @@
     
     <MudItem xs="12" sm="6" md="4" lg="3">
         <div class="basic-card expense-income-card">
-            <h2>Expense & Income</h2>
+            <h2>Expenses & Income</h2>
         
             <p class="budget-income">Income last 30 days: @_transactionService.GetIncomeLast30Days()$</p>
-            <p class="budget-income">Expences last 30 days: @_transactionService.GetExpenseLast30Days()$</p>
+            <p class="budget-income">Expenses last 30 days: @_transactionService.GetExpensesLast30Days()$</p>
         
             <div class="chartWrapper">
-                <PieChart Labels="@(new[] {"Total Income", "Total Expense"})"
+                <PieChart Labels="@(new[] {"Total Income", "Total Expenses"})"
                           Income="@_transactionService.GetTotalIncome()"
                           Expense="@_transactionService.GetTotalExpense()">
                 </PieChart>
@@ -46,7 +46,7 @@
 <MudGrid>
     <MudItem xs="12">
         <div class="basic-card">
-            <TransactionTable Header="last 10 transactions" ItemCount="10"></TransactionTable>
+            <TransactionTable Header="Last 10 Transactions" ItemCount="10"></TransactionTable>
         </div>
     </MudItem>
 </MudGrid>

@@ -7,7 +7,7 @@ This is my program developed for the application at the LMU - MMT Program 2021. 
 ## Features
 
 The Personal Budget Project is a web-based program that can run on any operating system. In addition to that, the project follows the mobile-first concept and is not only responsive but also a progressive web app. 
-That means, that you can install the web app on your device (Smartphone, PC, TV, etc.) and also access it offline.
+That means, that you can install the web app on your device (Smartphone, PC, TV, etc.) and also access it offline. A TransactionService handles all the main logic and a [UI-Library](https://mudblazor.com/) was used for a basic design.
 
 ### Dashboard
 * Current budget display
@@ -42,7 +42,7 @@ In order to see the program in action, you can either start a local instance on 
 
 
 ## License
-[MIT](https://choosealicense.com/licenses/mit/)
+This app is licensed under the [MIT Licence](https://choosealicense.com/licenses/mit/).
 
 
 <!-- MARKDOWN LINKS & IMAGES -->

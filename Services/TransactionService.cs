@@ -162,16 +162,16 @@ namespace PersonalBudget.Services
         {
             //return the sum of all positive transaction from the last 30 days
             return TransactionList
-                .Where(t => (DateTime.Now - t.Date) <= TimeSpan.FromDays(30) && t.Amount > 0)
+                .Where(t => (DateTime.Now - t.Date) <= TimeSpan.FromDays(30) && t.Date <= DateTime.Now && t.Amount > 0)
                 .Sum(transaction => transaction.Amount);
         }
         
         /// <inheritdoc />
-        public decimal GetExpenseLast30Days()
+        public decimal GetExpensesLast30Days()
         {
             //return the sum of all negative transaction from the last 30 days
             return TransactionList
-                .Where(t => (DateTime.Now - t.Date) <= TimeSpan.FromDays(30) && t.Amount < 0)
+                .Where(t => (DateTime.Now - t.Date) <= TimeSpan.FromDays(30) && t.Date <= DateTime.Now && t.Amount < 0)
                 .Sum(transaction => transaction.Amount);
         }
     }
